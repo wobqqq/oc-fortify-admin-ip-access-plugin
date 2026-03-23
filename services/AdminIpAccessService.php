@@ -81,22 +81,6 @@ final class AdminIpAccessService
         Fortify::set('ip_firewall', $ipFirewall);
     }
 
-    public function enable(): void
-    {
-        /** @var array<string, mixed>|\Illuminate\Support\Collection<int, mixed> $ipFirewall */
-        $ipFirewall = Fortify::get('ip_firewall');
-
-        if ($ipFirewall instanceof \Illuminate\Support\Collection) {
-            $ipFirewall = $ipFirewall->toArray();
-        }
-
-        $ipFirewall = !is_array($ipFirewall) ? [] : $ipFirewall;
-
-        $ipFirewall['admin_ip_access_enabled'] = true;
-
-        Fortify::set('ip_firewall', $ipFirewall);
-    }
-
     public function disable(): void
     {
         /** @var array<string, mixed>|\Illuminate\Support\Collection<int, mixed> $ipFirewall */

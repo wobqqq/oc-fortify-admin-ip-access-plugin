@@ -11,7 +11,6 @@ use System\Classes\PluginBase;
 use Validator;
 use Wobqqq\FortifyAdminIpAccess\Console\AdminIpAccessAddIpCommand;
 use Wobqqq\FortifyAdminIpAccess\Console\AdminIpAccessDisableCommand;
-use Wobqqq\FortifyAdminIpAccess\Console\AdminIpAccessEnableCommand;
 use Wobqqq\FortifyAdminIpAccess\Http\Middlewares\AdminIpAccessMiddleware;
 use Wobqqq\FortifyAdminIpAccess\Listeners\FortifyListener;
 use Wobqqq\FortifyAdminIpAccess\Services\AdminIpAccessService;
@@ -26,7 +25,6 @@ final class Plugin extends PluginBase
     public function register(): void
     {
         $this->registerConsoleCommand('wobqqq.fortify:admin-ip-access:add-ip', AdminIpAccessAddIpCommand::class);
-        $this->registerConsoleCommand('wobqqq.fortify:admin-ip-access:enable', AdminIpAccessEnableCommand::class);
         $this->registerConsoleCommand('wobqqq.fortify:admin-ip-access:disable', AdminIpAccessDisableCommand::class);
     }
 
