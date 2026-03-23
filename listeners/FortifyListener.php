@@ -61,6 +61,7 @@ final readonly class FortifyListener
             /** @var Fortify $fortify */
             $fortify = $form->model;
 
+            $this->serveModelInitSettingsData($fortify);
             $this->serveFields($form);
             $this->presetCurrentIp($fortify);
         });
@@ -96,6 +97,11 @@ final readonly class FortifyListener
     private function serveModelInitSettingsData(Fortify $fortify): void
     {
         $ipFirewall = (isset($fortify->ip_firewall) && is_array($fortify->ip_firewall)) ? $fortify->ip_firewall : [];
+
+        if (!empty($ipFirewall)) {
+            return;
+        }
+
         $ipFirewall['admin_ip_access_enabled'] = false;
         $ipFirewall['admin_ip_access_view'] = View::DENIED->value;
         /** @noinspection PhpUndefinedFieldInspection */
