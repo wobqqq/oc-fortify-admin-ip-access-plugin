@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Wobqqq\FortifyAdminIpAccess\Services;
 
+use App;
 use Arr;
 use Config;
+use October\Rain\Router\CoreRouter;
 use Symfony\Component\HttpFoundation\IpUtils;
 use Wobqqq\Fortify\Models\Fortify;
 use Wobqqq\FortifyAdminIpAccess\Http\Middlewares\AdminIpAccessMiddleware;
@@ -28,6 +30,10 @@ final class AdminIpAccessService
         if (!$adminIpAccessDto->enabled) {
             return;
         }
+
+        /** @var CoreRouter $coreRoute */
+        $coreRoute = App::make('router');
+        $coreRoute->aliasMiddleware(AdminIpAccessMiddleware::ALIAS, AdminIpAccessMiddleware::class);
 
         $this->overrideConfig();
     }
