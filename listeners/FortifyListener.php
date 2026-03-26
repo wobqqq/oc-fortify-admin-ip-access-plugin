@@ -79,10 +79,8 @@ final readonly class FortifyListener
         && (count($adminIpAccessDto->exactIps) > 0 || count($adminIpAccessDto->cidrRanges)  > 0)
             ? WidgetItemColor::SUCCESS
             : WidgetItemColor::DANGER;
-        /** @var string $name */
-        $name = Lang::get('wobqqq.fortify::lang.fields.admin_ip_access');
         $widgetGroupItemDto = FortifyTransformer::widgetGroupItemDto(
-            $name,
+            'wobqqq.fortify::lang.fields.admin_ip_access',
             [$settingsLink],
             $color,
             'icon-ban',
