@@ -7,7 +7,6 @@ namespace Wobqqq\FortifyAdminIpAccess\Listeners;
 use Arr;
 use Backend;
 use Backend\Widgets\Form;
-use Lang;
 use October\Rain\Events\Dispatcher;
 use Request;
 use System\Controllers\Settings;
