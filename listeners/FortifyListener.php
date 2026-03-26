@@ -81,11 +81,6 @@ final readonly class FortifyListener
             : WidgetItemColor::DANGER;
         /** @var string $name */
         $name = Lang::get('wobqqq.fortify::lang.fields.admin_ip_access');
-        $name = sprintf(
-            '%s (%s)',
-            $name,
-            (count($adminIpAccessDto->exactIps) + count($adminIpAccessDto->cidrRanges))
-        );
         $widgetGroupItemDto = FortifyTransformer::widgetGroupItemDto(
             $name,
             [$settingsLink],
