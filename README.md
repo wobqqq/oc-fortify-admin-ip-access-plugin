@@ -4,6 +4,16 @@
 
 It integrates seamlessly with the main [Fortify](https://octobercms.com/plugin/wobqqq-fortify) plugin and provides an additional layer of protection against unauthorized access.
 
+## 📊 Security Dashboard Widget
+
+Fortify includes a built-in dashboard widget that gives you a real-time overview of your system’s security status.
+
+- Highlights critical vulnerabilities and misconfigurations
+- Provides quick access to all security checks and tools
+- Helps you identify and fix issues in one place
+
+This widget acts as a central hub, allowing you to monitor and manage your application's security at a glance.
+
 ## 🚀 Features
 
 - Restrict admin panel access to specific IP addresses
