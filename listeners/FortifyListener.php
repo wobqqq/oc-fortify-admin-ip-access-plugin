@@ -7,7 +7,6 @@ namespace Wobqqq\FortifyAdminIpAccess\Listeners;
 use Arr;
 use Backend;
 use Backend\Widgets\Form;
-use October\Rain\Events\Dispatcher;
 use Request;
 use System\Controllers\Settings;
 use Wobqqq\Fortify\Dto\WidgetGroupItemDto;
@@ -26,7 +25,11 @@ final readonly class FortifyListener
     ) {
     }
 
-    public function subscribe(Dispatcher $event): void
+    /**
+     * @param \October\Rain\Events\Dispatcher $event
+     * @return void
+     */
+    public function subscribe($event): void
     {
         $event->listen(FortifyEvent::SERVICES_WIDGET_GROUP_ITEM_ADMIN_IP_ACCESS->value, function (WidgetGroupItemDto &$widgetGroupItemDto) {
             $this->serveWidgetGroupItem($widgetGroupItemDto);
