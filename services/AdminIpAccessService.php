@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Wobqqq\FortifyAdminIpAccess\Services;
 
 use App;
-use Arr;
 use Config;
+use Illuminate\Support\Collection;
 use October\Rain\Router\CoreRouter;
 use Symfony\Component\HttpFoundation\IpUtils;
 use Wobqqq\Fortify\Models\Fortify;
@@ -15,6 +15,8 @@ use Wobqqq\FortifyAdminIpAccess\Instances\AdminIpAccessDtoInstance;
 
 final class AdminIpAccessService
 {
+    private const IPS_KEY = 'admin_ip_access_ips';
+
     private static bool $addMiddleware = false;
 
     public function addMiddleware(): void
@@ -38,15 +40,14 @@ final class AdminIpAccessService
         $this->overrideConfig();
     }
 
+    /**
+     * An empty whitelist lets everyone in: locking every administrator out would be worse.
+     */
     public function check(string $ip): bool
     {
         $adminIpAccessDto = AdminIpAccessDtoInstance::instance()->get();
 
-        if (!$adminIpAccessDto->enabled) {
-            return true;
-        }
-
-        if (empty($adminIpAccessDto->cidrRanges) && empty($adminIpAccessDto->exactIps)) {
+        if (!$adminIpAccessDto->enabled || ($adminIpAccessDto->cidrRanges === [] && $adminIpAccessDto->exactIps === [])) {
             return true;
         }
 
@@ -54,73 +55,76 @@ final class AdminIpAccessService
             return true;
         }
 
-        if (!empty($adminIpAccessDto->cidrRanges) && IpUtils::checkIp($ip, $adminIpAccessDto->cidrRanges)) {
-            return true;
-        }
-
-        return false;
+        return IpUtils::checkIp($ip, array_merge(array_keys($adminIpAccessDto->exactIps), $adminIpAccessDto->cidrRanges));
     }
 
-    public function addIp(string $ip): void
+    /**
+     * @return bool false when the whitelist already lets the address in
+     */
+    public function addIp(string $ip): bool
     {
         $ip = trim($ip);
 
-        if (empty($ip)) {
-            return;
+        if ($ip === '') {
+            return false;
         }
 
-        /** @var array<string, mixed>|\Illuminate\Support\Collection<int, mixed> $ipFirewall */
-        $ipFirewall = Fortify::get('ip_firewall');
+        $ipFirewall = $this->ipFirewall();
+        $rows = is_array($ipFirewall[self::IPS_KEY] ?? null) ? $ipFirewall[self::IPS_KEY] : [];
 
-        if ($ipFirewall instanceof \Illuminate\Support\Collection) {
-            $ipFirewall = $ipFirewall->toArray();
+        $listed = [];
+
+        foreach ($rows as $row) {
+            if (is_array($row) && is_string($row['ip'] ?? null) && trim($row['ip']) !== '') {
+                $listed[] = trim($row['ip']);
+            }
         }
 
-        $ipFirewall = !is_array($ipFirewall) ? [] : $ipFirewall;
+        if (in_array($ip, $listed, true) || (!str_contains($ip, '/') && $listed !== [] && IpUtils::checkIp($ip, $listed))) {
+            return false;
+        }
 
-        /** @var array<int, array<string, string>> $adminIpAccessIps */
-        $adminIpAccessIps = Arr::get($ipFirewall, 'admin_ip_access_ips', []);
-        $adminIpAccessIps[] = ['ip' => $ip];
-
-        $ipFirewall['admin_ip_access_ips'] = $adminIpAccessIps;
+        $rows[] = ['ip' => $ip];
+        $ipFirewall[self::IPS_KEY] = array_values($rows);
 
         Fortify::set('ip_firewall', $ipFirewall);
+
+        return true;
     }
 
     public function disable(): void
     {
-        /** @var array<string, mixed>|\Illuminate\Support\Collection<int, mixed> $ipFirewall */
-        $ipFirewall = Fortify::get('ip_firewall');
-
-        if ($ipFirewall instanceof \Illuminate\Support\Collection) {
-            $ipFirewall = $ipFirewall->toArray();
-        }
-
-        $ipFirewall = !is_array($ipFirewall) ? [] : $ipFirewall;
-
+        $ipFirewall = $this->ipFirewall();
         $ipFirewall['admin_ip_access_enabled'] = false;
 
         Fortify::set('ip_firewall', $ipFirewall);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function ipFirewall(): array
+    {
+        $ipFirewall = Fortify::get('ip_firewall');
+
+        if ($ipFirewall instanceof Collection) {
+            $ipFirewall = $ipFirewall->toArray();
+        }
+
+        /** @var array<string, mixed> $ipFirewall */
+        $ipFirewall = is_array($ipFirewall) ? $ipFirewall : [];
+
+        return $ipFirewall;
+    }
+
     private function overrideConfig(): void
     {
-        /** @var string|null|array<int, string> $middleware */
         $middleware = Config::get('backend.middleware_group', []);
-
-        if (is_string($middleware)) {
-            $middleware = [$middleware];
-        }
-
-        if (empty($middleware)) {
-            $middleware = [];
-        }
+        $middleware = is_string($middleware) ? [$middleware] : (is_array($middleware) ? $middleware : []);
+        $middleware = array_filter($middleware, static fn (mixed $name): bool => is_string($name) && $name !== '');
 
         $middleware[] = AdminIpAccessMiddleware::ALIAS;
-        /** @var array<int, string> $middleware */
-        $middleware = array_unique($middleware);
-        $middleware = array_filter($middleware);
 
-        Config::set('backend.middleware_group', $middleware);
+        Config::set('backend.middleware_group', array_values(array_unique($middleware)));
     }
 }

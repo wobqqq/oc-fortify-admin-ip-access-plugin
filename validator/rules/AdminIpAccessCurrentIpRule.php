@@ -4,45 +4,36 @@ declare(strict_types=1);
 
 namespace Wobqqq\FortifyAdminIpAccess\Validator\Rules;
 
-use Arr;
 use Lang;
 use Request;
+use Symfony\Component\HttpFoundation\IpUtils;
 
 final class AdminIpAccessCurrentIpRule
 {
     /**
-     * @param string $attribute
-     * @param mixed $value
+     * The administrator who saves the whitelist must still be on it.
+     *
      * @param array<mixed, mixed> $params
-     * @return bool
      */
-    public function validate(string $attribute, $value, $params): bool
+    public function validate(string $attribute, mixed $value, array $params): bool
     {
-        /** @var \Illuminate\Contracts\Foundation\Application $app */
-        $app = app();
-        $isConsole = $app->runningInConsole();
-        $currenIp = Request::ip();
+        $currentIp = Request::ip();
 
-        if ($isConsole || empty($currenIp)) {
+        if (app()->runningInConsole() || !is_string($currentIp) || $currentIp === '' || !is_array($value) || $value === []) {
             return true;
         }
 
-        if (empty($value) || !is_array($value)) {
-            return true;
-        }
+        $ips = [];
 
-        /** @var array<int, array<string, string|null>> $ips */
-        $ips = $value;
+        foreach ($value as $row) {
+            $ip = is_array($row) && is_string($row['ip'] ?? null) ? trim($row['ip']) : '';
 
-        foreach ($ips as $ip) {
-            $ip = Arr::get($ip, 'ip');
-
-            if ($currenIp === $ip) {
-                return true;
+            if ($ip !== '') {
+                $ips[] = $ip;
             }
         }
 
-        return false;
+        return $ips === [] || IpUtils::checkIp($currentIp, $ips);
     }
 
     public function message(): string
@@ -50,7 +41,7 @@ final class AdminIpAccessCurrentIpRule
         /** @var string $message */
         $message = Lang::get(
             'wobqqq.fortify::lang.validator_rules.admin_ip_access_current_ip',
-            ['ip' => Request::ip()],
+            ['ip' => e((string)Request::ip())],
         );
 
         return $message;

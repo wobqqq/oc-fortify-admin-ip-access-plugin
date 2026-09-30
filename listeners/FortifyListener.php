@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Wobqqq\FortifyAdminIpAccess\Listeners;
 
-use Arr;
 use Backend;
 use Backend\Widgets\Form;
-use October\Rain\Events\Dispatcher;
+use October\Rain\Events\PriorityDispatcher;
 use Request;
+use Symfony\Component\HttpFoundation\IpUtils;
 use System\Controllers\Settings;
 use Wobqqq\Fortify\Dto\WidgetGroupItemDto;
 use Wobqqq\Fortify\Enums\FortifyEvent;
@@ -21,50 +21,47 @@ use Wobqqq\FortifyAdminIpAccess\Instances\AdminIpAccessDtoInstance;
 
 final readonly class FortifyListener
 {
+    private const IPS_KEY = 'admin_ip_access_ips';
+
     public function __construct(
         private AdminIpAccessDtoCache $adminIpAccessDtoCache,
     ) {
     }
 
-
-    /**
-     * @param Dispatcher $event
-     * @return void
-     */
-    public function subscribe($event): void
+    public function subscribe(PriorityDispatcher $event): void
     {
-        $event->listen(FortifyEvent::SERVICES_WIDGET_GROUP_ITEM_ADMIN_IP_ACCESS->value, function (WidgetGroupItemDto &$widgetGroupItemDto) {
+        $event->listen(FortifyEvent::SERVICES_WIDGET_GROUP_ITEM_ADMIN_IP_ACCESS->value, function (WidgetGroupItemDto &$widgetGroupItemDto): void {
             $this->serveWidgetGroupItem($widgetGroupItemDto);
         });
 
-        $event->listen(FortifyEvent::MODEL_FORTIFY_INIT_SETTINGS_DATA->value, function (Fortify &$fortify) {
+        $event->listen(FortifyEvent::MODEL_FORTIFY_INIT_SETTINGS_DATA->value, function (Fortify &$fortify): void {
             $this->serveModelInitSettingsData($fortify);
         });
 
-        Fortify::extend(function (Fortify $fortify) {
+        Fortify::extend(function (Fortify $fortify): void {
             $this->serveModel($fortify);
-
-            $fortify->bindEvent('model.beforeSave', function () use ($fortify) {
-                $this->filterEmptyIPs($fortify, 'admin_ip_access_ips');
-            });
-
-            $fortify->bindEvent('model.afterSave', function () {
-                $this->adminIpAccessDtoCache->clear();
-            });
-
-            $fortify->bindEvent('model.afterDelete', function () {
-                $this->adminIpAccessDtoCache->clear();
-            });
         });
 
-        $event->listen('backend.form.extendFields', function (Form $form) {
+        // Model events, not bindEvent(): the settings instance may predate this listener.
+        $event->listen('eloquent.saving: ' . Fortify::class, function (Fortify $fortify): void {
+            $this->filterEmptyIps($fortify);
+        });
+
+        $event->listen(
+            ['eloquent.saved: ' . Fortify::class, 'eloquent.deleted: ' . Fortify::class],
+            function (): void {
+                $this->adminIpAccessDtoCache->clear();
+            },
+        );
+
+        $event->listen('backend.form.extendFields', function (Form $form): void {
             if (!$form->getController() instanceof Settings || !$form->model instanceof Fortify || $form->isNested) {
                 return;
             }
 
-            /** @var Fortify $fortify */
             $fortify = $form->model;
 
+            $this->serveModel($fortify);
             $this->serveModelInitSettingsData($fortify);
             $this->serveFields($form);
             $this->presetCurrentIp($fortify);
@@ -79,8 +76,7 @@ final readonly class FortifyListener
             'icon-wrench',
         );
         $adminIpAccessDto = AdminIpAccessDtoInstance::instance()->get();
-        $color = $adminIpAccessDto->enabled === true
-        && (count($adminIpAccessDto->exactIps) > 0 || count($adminIpAccessDto->cidrRanges)  > 0)
+        $color = $adminIpAccessDto->enabled && ($adminIpAccessDto->exactIps !== [] || $adminIpAccessDto->cidrRanges !== [])
             ? WidgetItemColor::SUCCESS
             : WidgetItemColor::DANGER;
         $widgetGroupItemDto = FortifyTransformer::widgetGroupItemDto(
@@ -93,16 +89,11 @@ final readonly class FortifyListener
 
     private function serveModelInitSettingsData(Fortify $fortify): void
     {
-        $ipFirewall = (isset($fortify->ip_firewall) && is_array($fortify->ip_firewall)) ? $fortify->ip_firewall : [];
+        $ipFirewall = is_array($fortify->ip_firewall) ? $fortify->ip_firewall : [];
 
-        if (!empty($ipFirewall)) {
-            return;
-        }
+        $ipFirewall['admin_ip_access_enabled'] ??= false;
+        $ipFirewall['admin_ip_access_view'] ??= View::DENIED->value;
 
-        $ipFirewall['admin_ip_access_enabled'] = false;
-        $ipFirewall['admin_ip_access_view'] = View::DENIED->value;
-        /** @noinspection PhpUndefinedFieldInspection */
-        /** @phpstan-ignore-next-line */
         $fortify->ip_firewall = $ipFirewall;
     }
 
@@ -183,50 +174,38 @@ final readonly class FortifyListener
 
     private function presetCurrentIp(Fortify $fortify): void
     {
-        if (isset($fortify->ip_firewall) && is_array($fortify->ip_firewall)) {
-            /** @var array<string, mixed> $ipFirewall */
-            $ipFirewall = $fortify->ip_firewall;
-        } else {
-            $ipFirewall = [];
+        $ipFirewall = is_array($fortify->ip_firewall) ? $fortify->ip_firewall : [];
+        $ipTable = is_array($ipFirewall[self::IPS_KEY] ?? null) ? $ipFirewall[self::IPS_KEY] : [];
+
+        $ips = [];
+
+        foreach ($ipTable as $row) {
+            if (is_array($row) && is_string($row['ip'] ?? null) && trim($row['ip']) !== '') {
+                $ips[] = trim($row['ip']);
+            }
         }
-
-        /** @var array<int, mixed> $ipTable */
-        $ipTable = Arr::get($ipFirewall, 'admin_ip_access_ips', []);
-
-        $ips = array_column($ipTable, 'ip');
 
         $ip = Request::ip();
 
-        if (!in_array($ip, $ips)) {
+        if (is_string($ip) && ($ips === [] || !IpUtils::checkIp($ip, $ips))) {
             $ipTable[] = ['ip' => $ip];
-
-            $ipFirewall['admin_ip_access_ips'] = $ipTable;
-            /** @noinspection PhpUndefinedFieldInspection */
-            /** @phpstan-ignore-next-line */
+            $ipFirewall[self::IPS_KEY] = $ipTable;
             $fortify->ip_firewall = $ipFirewall;
         }
     }
 
-    private function filterEmptyIPs(Fortify $fortify, string $fieldName): void
+    private function filterEmptyIps(Fortify $fortify): void
     {
-        if (isset($fortify->ip_firewall) && is_array($fortify->ip_firewall)) {
-            /** @var array<string, mixed> $ipFirewall */
-            $ipFirewall = $fortify->ip_firewall;
-            /** @var array<int, array<string, string|null>> $ipsTable */
-
-            $ipsTable = Arr::get($ipFirewall, $fieldName, []);
-            foreach ($ipsTable as $key => $row) {
-                /** @var string|null $ip */
-                $ip = Arr::get($row, 'ip');
-                $ip = trim((string)$ip);
-
-                if (empty($ip)) {
-                    unset($ipsTable[$key]);
-                }
-            }
-
-            $ipFirewall[$fieldName] = $ipsTable;
-            $fortify->ip_firewall = $ipFirewall;
+        if (!is_array($fortify->ip_firewall) || !is_array($fortify->ip_firewall[self::IPS_KEY] ?? null)) {
+            return;
         }
+
+        $ipFirewall = $fortify->ip_firewall;
+        $ipFirewall[self::IPS_KEY] = array_values(array_filter(
+            $fortify->ip_firewall[self::IPS_KEY],
+            static fn (mixed $row): bool => is_array($row) && is_scalar($row['ip'] ?? null) && trim((string)$row['ip']) !== '',
+        ));
+
+        $fortify->ip_firewall = $ipFirewall;
     }
 }

@@ -11,24 +11,20 @@ use Wobqqq\Fortify\Enums\View;
 use Wobqqq\FortifyAdminIpAccess\Instances\AdminIpAccessDtoInstance;
 use Wobqqq\FortifyAdminIpAccess\Services\AdminIpAccessService;
 
-final class AdminIpAccessMiddleware
+final readonly class AdminIpAccessMiddleware
 {
     public const ALIAS = 'fortify_admin_ip_access';
 
-    public function __construct(private readonly AdminIpAccessService $adminIpAccessService)
+    public function __construct(private AdminIpAccessService $adminIpAccessService)
     {
     }
 
     /**
-     * @param Request $request
-     * @param Closure $next
-     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response|mixed
+     * @param Closure(Request): mixed $next
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): mixed
     {
-        $ip = $request->ip();
-
-        if ($this->adminIpAccessService->check((string)$ip)) {
+        if ($this->adminIpAccessService->check((string)$request->ip())) {
             return $next($request);
         }
 

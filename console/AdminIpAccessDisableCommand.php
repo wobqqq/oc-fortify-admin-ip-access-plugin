@@ -15,10 +15,12 @@ final class AdminIpAccessDisableCommand extends Command
     /** @var string */
     protected $description = 'Disable Admin Ip Access.';
 
-    public function handle(AdminIpAccessService $adminIpAccessService): void
+    public function handle(AdminIpAccessService $adminIpAccessService): int
     {
         $adminIpAccessService->disable();
 
         $this->info('Admin Ip Access disabled.');
+
+        return self::SUCCESS;
     }
 }

@@ -18,7 +18,6 @@ final class Plugin extends PluginBase
     /** @var array<int, string> */
     public $require = ['Wobqqq.Fortify'];
 
-
     public function register(): void
     {
         $this->registerConsoleCommand('wobqqq.fortify:admin-ip-access:add-ip', AdminIpAccessAddIpCommand::class);
