@@ -10,7 +10,10 @@
         "security",
         "ip-whitelist",
         "admin",
-        "fortify"
+        "fortify",
+        "laravel",
+        "admin-panel",
+        "access-control"
     ],
     "authors": [
         {
@@ -18,15 +21,17 @@
             "homepage": "https://github.com/wobqqq"
         }
     ],
-    "homepage": "https://github.com/wobqqq/oc-fortify-admin-ip-access-plugin",
+    "homepage": "https://octobercms.com/plugin/wobqqq-fortifyadminipaccess",
     "support": {
         "issues": "https://github.com/wobqqq/oc-fortify-admin-ip-access-plugin/issues",
         "source": "https://github.com/wobqqq/oc-fortify-admin-ip-access-plugin",
+        "docs": "https://github.com/wobqqq/oc-fortify-admin-ip-access-plugin#readme",
         "security": "https://github.com/wobqqq/oc-fortify-admin-ip-access-plugin/security/policy"
     },
     "require": {
         "php": "^8.2",
-        "composer/installers": "^1.0 || ^2.0"
+        "composer/installers": "^1.0 || ^2.0",
+        "wobqqq/fortify-plugin": "^1.0.3"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.48",
@@ -38,15 +43,8 @@
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0",
-        "rector/rector": "^2.2",
-        "wobqqq/fortify-plugin": "dev-main"
+        "rector/rector": "^2.2"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/wobqqq/oc-fortify-plugin"
-        }
-    ],
     "autoload-dev": {
         "psr-4": {
             "Wobqqq\\FortifyAdminIpAccess\\Tests\\": "tests/"
