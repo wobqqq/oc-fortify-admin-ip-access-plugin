@@ -4,7 +4,7 @@ Guidance for AI coding agents (Claude Code, Codex, Junie, Cursor) working in thi
 
 ## What this is
 
-**Admin IP Access** (`Wobqqq.FortifyAdminIpAccess`) is a paid module of the Fortify security suite for October CMS 3.x/4.x (built and tested against 4.4 on Laravel 12, PHP 8.2+). It opens the backend only to the IP addresses and subnets on a whitelist, answering any other address 403 with the page the administrator chose; the site's frontend is not affected.
+**Admin IP Access** (`Wobqqq.FortifyAdminIpAccess`) is a free module of the Fortify security suite for October CMS 3.x/4.x (built and tested against 4.4 on Laravel 12, PHP 8.2+). It opens the backend only to the IP addresses and subnets on a whitelist, answering any other address 403 with the page the administrator chose; the site's frontend is not affected.
 
 It requires the core plugin [`Wobqqq.Fortify`](https://github.com/wobqqq/oc-fortify-plugin): the settings live in the core's `Wobqqq\Fortify\Models\Fortify` record under the `ip_firewall.admin_ip_access_*` key and appear on **Settings → Fortify**, and the module draws its own item on the core's dashboard widget.
 

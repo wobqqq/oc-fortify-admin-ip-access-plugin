@@ -1,7 +1,7 @@
 {
     "name": "wobqqq/fortifyadminipaccess-plugin",
     "description": "Fortify module for October CMS: opens the backend only to the IP addresses on a whitelist",
-    "license": "proprietary",
+    "license": "MIT",
     "type": "october-plugin",
     "keywords": [
         "october",
