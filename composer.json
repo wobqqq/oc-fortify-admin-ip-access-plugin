@@ -10,7 +10,10 @@
         "security",
         "ip-whitelist",
         "admin",
-        "fortify"
+        "fortify",
+        "laravel",
+        "admin-panel",
+        "access-control"
     ],
     "authors": [
         {
@@ -18,10 +21,11 @@
             "homepage": "https://github.com/wobqqq"
         }
     ],
-    "homepage": "https://github.com/wobqqq/oc-fortify-admin-ip-access-plugin",
+    "homepage": "https://octobercms.com/plugin/wobqqq-fortifyadminipaccess",
     "support": {
         "issues": "https://github.com/wobqqq/oc-fortify-admin-ip-access-plugin/issues",
         "source": "https://github.com/wobqqq/oc-fortify-admin-ip-access-plugin",
+        "docs": "https://github.com/wobqqq/oc-fortify-admin-ip-access-plugin#readme",
         "security": "https://github.com/wobqqq/oc-fortify-admin-ip-access-plugin/security/policy"
     },
     "require": {
