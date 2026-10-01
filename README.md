@@ -14,7 +14,7 @@ It integrates seamlessly with the main [Fortify](https://octobercms.com/plugin/w
 
 ## 📊 Security Dashboard Widget
 
-Fortify includes a built-in dashboard widget that gives you a real-time overview of your system’s security status.
+Fortify includes a dashboard widget that gives you an overview of your application’s security status.
 
 - Highlights critical vulnerabilities and misconfigurations
 - Provides quick access to all security checks and tools
@@ -51,7 +51,7 @@ This widget acts as a central hub, allowing you to monitor and manage your appli
 | **Artisan** | `php artisan plugin:install Wobqqq.FortifyAdminIpAccess` |
 | **Composer** | `composer require wobqqq/fortifyadminipaccess-plugin` then `php artisan october:migrate` |
 
-It needs the [Fortify](https://octobercms.com/plugin/wobqqq-fortify) core plugin: Composer installs it with the module, from the marketplace install **Fortify** first.
+It needs the [Fortify](https://octobercms.com/plugin/wobqqq-fortify) core plugin: Composer installs it with the module; when installing from the marketplace, install **Fortify** first.
 
 ## 💻 Usage
 
@@ -76,6 +76,7 @@ php artisan wobqqq.fortify:admin-ip-access:disable
 
 ## ⬆️ Upgrading
 
+- **1.0.4** — installing the module with Composer installs the Fortify core with it. Nothing changes on an existing site.
 - **1.0.3** — an administrator whose address is covered by a whitelisted subnet, or written in another IPv6 notation, is recognised. The whitelist rules, including the one that refuses a list without your own address, now apply on every save, and a saved whitelist is applied at once instead of up to an hour later. `add-ip` refuses anything that is not an IP address or a subnet and does not add an address the whitelist already covers.
 
 ## ⚠️ Good to know
@@ -100,5 +101,5 @@ make test.coverage  # Pest with coverage (90 % minimum)
 make ready          # everything above
 ```
 
-Every pull request runs the same checks on GitHub Actions, plus a syntax check on PHP 8.2 and a run against the latest core. Pushing a tag that matches the last version in `updates/version.yaml` releases it to the October CMS marketplace once CI has passed.
+Every pull request runs the same checks on GitHub Actions, plus a syntax check on PHP 8.2 and a run against the latest core. Pushing a tag that matches the last version in `updates/version.yaml` publishes it as a GitHub release and to the October CMS marketplace once CI has passed.
 
