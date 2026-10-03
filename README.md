@@ -76,6 +76,7 @@ php artisan wobqqq.fortify:admin-ip-access:disable
 
 ## ⬆️ Upgrading
 
+- **1.0.5** — internal refactoring. Nothing changes on an existing site.
 - **1.0.4** — installing the module with Composer installs the Fortify core with it. Nothing changes on an existing site.
 - **1.0.3** — an administrator whose address is covered by a whitelisted subnet, or written in another IPv6 notation, is recognised. The whitelist rules, including the one that refuses a list without your own address, now apply on every save, and a saved whitelist is applied at once instead of up to an hour later. `add-ip` refuses anything that is not an IP address or a subnet and does not add an address the whitelist already covers.
 

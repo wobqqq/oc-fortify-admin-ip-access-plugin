@@ -7,3 +7,5 @@ v1.0.3:
     - 'A whitelisted subnet or IPv6 address that covers the administrator is recognised, the whitelist rules apply on every save and the settings are applied as soon as they are saved, add-ip refuses what is not an IP or a subnet and does not add one twice'
 v1.0.4:
     - 'Composer installs the Fortify core with the module; releases are published on GitHub'
+v1.0.5:
+    - 'Internal refactoring: the settings section moves from the listener to a service and the console command validates the address with a value object; settings and behaviour are unchanged'
