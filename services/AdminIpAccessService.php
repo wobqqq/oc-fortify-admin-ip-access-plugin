@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use October\Rain\Router\CoreRouter;
 use Symfony\Component\HttpFoundation\IpUtils;
 use Wobqqq\Fortify\Models\Fortify;
+use Wobqqq\FortifyAdminIpAccess\Dto\IpRangeDto;
 use Wobqqq\FortifyAdminIpAccess\Http\Middlewares\AdminIpAccessMiddleware;
 use Wobqqq\FortifyAdminIpAccess\Instances\AdminIpAccessDtoInstance;
 
@@ -61,13 +62,9 @@ final class AdminIpAccessService
     /**
      * @return bool false when the whitelist already lets the address in
      */
-    public function addIp(string $ip): bool
+    public function addIp(IpRangeDto $ipRange): bool
     {
-        $ip = trim($ip);
-
-        if ($ip === '') {
-            return false;
-        }
+        $ip = $ipRange->value;
 
         $ipFirewall = $this->ipFirewall();
         $rows = is_array($ipFirewall[self::IPS_KEY] ?? null) ? $ipFirewall[self::IPS_KEY] : [];
@@ -80,7 +77,7 @@ final class AdminIpAccessService
             }
         }
 
-        if (in_array($ip, $listed, true) || (!str_contains($ip, '/') && $listed !== [] && IpUtils::checkIp($ip, $listed))) {
+        if (in_array($ip, $listed, true) || (!$ipRange->isSubnet && $listed !== [] && IpUtils::checkIp($ip, $listed))) {
             return false;
         }
 
